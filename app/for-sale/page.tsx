@@ -1,8 +1,45 @@
-import Link from "next/link"
-import SearchFilters from "@/components/property-search/search-filters"
-import PropertyResults from "@/components/property-search/property-results"
+import { NextResponse } from "next/server"
+import { searchListings } from "@/lib/renet-api"
 
-export default function ForSalePage() {
+export async function GET(request: Request) {
+  const [properties, setProperties] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        // Construct query params
+        const params = new URLSearchParams()
+        params.set('category', 'sale')
+        
+        // Add existing search params
+        searchParams.forEach((value, key) => {
+          params.set(key, value)
+        })
+
+        const response = await fetch(`/api/search?${params.toString()}`)
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const data = await response.json()
+        setProperties(data.results || [])
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch properties')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProperties()
+  }, [searchParams])
+
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="mb-8">
@@ -34,7 +71,32 @@ export default function ForSalePage() {
         </div>
 
         <div className="lg:col-span-4">
-          <PropertyResults category="sale" />
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4">
+              <div className="flex items-center">
+                <svg className="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <span className="text-red-700">{error}</span>
+              </div>
+              <button 
+                onClick={() => window.location.reload()}
+                className="mt-2 text-sm text-red-600 hover:text-red-800"
+              >
+                Try again
+              </button>
+            </div>
+          ) : (
+            <PropertyResults 
+              category="sale" 
+              properties={properties}
+              emptyMessage="No properties found matching your criteria"
+            />
+          )}
         </div>
       </div>
     </div>

@@ -1,22 +1,22 @@
-"use client";
-import { ReactNode } from 'react';
+import { Property } from "@/types/listing"
+import ListingCard from "@/components/listing-card"
+import { Button } from "@/components/ui/button"
 
-interface PropertyDetailsProps {
-  heading: string;
-  address: {
-    street: string;
-    suburb: string;
-    state: string;
-    postcode: string;
-  };
-  price: string;
-  bedBathCarLand: {
-    key: string;
-    value: string;
-  }[];
+interface PropertyResultsProps {
+  properties: Property[]
+  loading?: boolean
+  error?: string | null
+  emptyMessage?: string
+  className?: string
 }
 
-export default function PropertyDetails({ heading, address, price, bedBathCarLand }: PropertyDetailsProps) {
+export default function PropertyResults({
+  properties = [],
+  loading = false,
+  error = null,
+  emptyMessage = "No properties found",
+  className = ""
+}: PropertyResultsProps) {
   // Helper function to get bed/bath/car values
   const getValue = (key: string): string => {
     const item = bedBathCarLand.find((item) => item.key === key);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { initRenetApi } from "@/lib/renet-api";
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
@@ -43,44 +44,36 @@ export default function ListingDetail({ params }: { params: { id: string } }) {
   useEffect(() => {
     async function fetchListing() {
       try {
-        // Mock data for now - replace with actual API call
-        const mockListing = {
-          listingID: id,
-          heading: "Beautiful Family Home",
-          address: {
-            street: "123 Main Street",
-            suburb: "Pleasantville",
-            state: "CA",
-            postcode: "12345"
-          },
-          price: "$750,000",
+        // Initialize API client
+        const api = initRenetApi(process.env.RENET_API_TOKEN || '');
+        
+        // Fetch real listing data
+        const listingData = await api.fetchListingById(id);
+        
+        // Transform API response to match our interface
+        const transformedListing = {
+          listingID: listingData.listingID,
+          heading: listingData.heading,
+          address: listingData.address,
+          price: listingData.price,
           bedBathCarLand: [
-            { key: "bedrooms", value: "4" },
-            { key: "bathrooms", value: "2" },
-            { key: "carSpaces", value: "2" },
-            { key: "landSize", value: "600 sqm" }
+            { key: "bedrooms", value: listingData.bedrooms?.toString() || "0" },
+            { key: "bathrooms", value: listingData.bathrooms?.toString() || "0" },
+            { key: "carSpaces", value: listingData.carSpaces?.toString() || "0" },
+            { key: "landSize", value: listingData.landSize || "N/A" }
           ],
-          images: [
-            { url: "/placeholder.svg" }
-          ],
-          description: "This beautiful property features 4 bedrooms and 2 bathrooms, situated on 600 sqm of land. Perfect for families or investors looking for a quality property in a desirable location.",
-          features: [
-            "Modern kitchen with stone benchtops",
-            "Air conditioning throughout",
-            "Spacious outdoor entertaining area",
-            "Fully fenced yard",
-            "Close to schools and amenities",
-            "Secure parking"
-          ],
-          agent: {
-            name: "John Smith",
-            email: "john@example.com",
-            phone: "+1 555-123-4567",
+          images: listingData.images || [{ url: "/placeholder.svg" }],
+          description: listingData.description || "No description available",
+          features: listingData.features || [],
+          agent: listingData.agents?.[0] || {
+            name: "Unknown Agent",
+            email: "",
+            phone: "",
             photo: "/placeholder.svg"
           }
         };
 
-        setListing(mockListing);
+        setListing(transformedListing);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching listing:", err);

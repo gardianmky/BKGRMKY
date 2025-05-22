@@ -9,6 +9,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  env: {
+    RENET_API_TOKEN: process.env.RENET_API_TOKEN,
+  },
 }
 
 export default nextConfig

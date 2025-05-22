@@ -83,38 +83,31 @@ export async function fetchLeasedListings(limit: number) {
 }
 
 export async function fetchFeaturedListing() {
-  // Mock data for demonstration purposes
-  return {
-    id: "featured-1",
-    heading: "Luxury Apartment with Ocean View",
-    address: {
-      street: "456 Ocean Drive",
-      suburb: "Coastal City",
-      state: "CA",
-      postcode: "54321"
-    },
-    price: "$1,200,000",
-    bedBathCarLand: [
-      { key: "bedrooms", value: "3" },
-      { key: "bathrooms", value: "3" },
-      { key: "carSpaces", value: "2" },
-      { key: "landSize", value: "800 sqm" }
-    ],
-    images: [
-      { url: "/placeholder.svg" },
-      { url: "/placeholder.svg" },
-      { url: "/placeholder.svg" }
-    ],
-    agents: [
-      {
-        name: "John Doe",
-        title: "Principal Agent",
-        mobile: "555-987-6543",
-        imageURL: "/placeholder.svg"
-      }
-    ],
-    dateListed: new Date().toISOString()
-  };
+  try {
+    const listings = await fetchListings({ limit: 10 })
+    // Find a listing with good images to feature
+    const featured = listings.find(listing => 
+      listing.images?.length >= 3 && 
+      listing.price && 
+      listing.heading
+    )
+    
+    if (!featured) return null
+
+    return {
+      ...featured,
+      bedBathCarLand: [
+        { key: "bedrooms", value: featured.bedrooms?.toString() || "N/A" },
+        { key: "bathrooms", value: featured.bathrooms?.toString() || "N/A" },
+        { key: "carSpaces", value: featured.carSpaces?.toString() || "N/A" },
+        { key: "landSize", value: featured.landSize || "N/A" }
+      ],
+      images: featured.images?.map(img => ({ url: img.url })) || []
+    }
+  } catch (error) {
+    console.error('Error fetching featured listing:', error)
+    return null
+  }
 }
 
 export async function fetchListings() {
